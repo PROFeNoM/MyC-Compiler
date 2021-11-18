@@ -44,7 +44,7 @@ void yyerror (char* s) {
 %start prog  
 
 // liste de tous les non terminaux dont vous voulez manipuler l'attribut
-%type <att> exp  typename
+%type <att> exp  typename  type  vlist
          
 
 %%
@@ -62,7 +62,7 @@ func_list : func_list fun      {}
 fun : fun_type fun_head fun_body        {}
 ;
 
-fun_type: type                 {}
+fun_type: type                 {printf("%s ", $1->name);}
 
 fun_head : ID PO PF            {printf("%s() {\n", $1->name);} // erreur si profondeur diff zero
 | ID PO params PF              {}
@@ -71,8 +71,8 @@ fun_head : ID PO PF            {printf("%s() {\n", $1->name);} // erreur si prof
 params: type ID vir params     {}
 | type ID                      {}
 
-vlist: vlist vir ID            {}
-| ID                           {}
+vlist: vlist vir ID            {$3->offset = get_offset();printf("LOADI(%d);\n", $3->int_val); set_symbol_value(string_to_sid($3->name), $3);}
+| ID                           {$1->offset = get_offset();printf("LOADI(%d);\n", $1->int_val); set_symbol_value(string_to_sid($1->name), $1);}
 ;
 
 vir : VIR                      {}
@@ -99,7 +99,7 @@ var_decl : type vlist          {}
 ;
 
 type
-: typename                     {printf("%s ", $1->name);}
+: typename                     {$$ = $1;}
 ;
 
 typename
@@ -137,13 +137,13 @@ af : AF                       {}
 
 // II.1 Affectations
 
-aff : ID EQ exp               {}
+aff : ID EQ exp               {printf("STORE(mp + %d);\n", get_symbol_value($1->name)->offset);}
 ;
 
 
 // II.2 Return
-ret : RETURN exp              {}
-| RETURN PO PF                {}
+ret : RETURN exp              {if (exists_symbol_value($2->name)) printf("STORE(mp);\n"); printf("EXIT_MAIN;\n");}
+| RETURN PO PF                {printf("EXIT_MAIN;\n");}
 ;
 
 // II.3. Conditionelles
@@ -192,7 +192,7 @@ exp
 | exp STAR exp                {printf("MULTI;\n");}
 | exp DIV exp                 {printf("DIVI\n");}
 | PO exp PF                   {}
-| ID                          {printf("LOAD(0);\n");}
+| ID                          {printf("LOAD(mp + %d);\n", get_symbol_value($1->name)->offset);}
 | app                         {}
 | NUM                         {printf("LOADI(%d);\n", $1->int_val);}
 

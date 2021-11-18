@@ -66,3 +66,20 @@ attribute set_symbol_value(sid symb_id,attribute value) {
 	return storage -> symbol_value;
 }
 
+int offset = 0;
+int get_offset() 
+{
+	return offset++;
+}
+
+int exists_symbol_value(sid symb_id) {
+	elem* tracker = storage;
+
+	while (tracker) {
+		if (tracker->symbol_name == symb_id) 
+			return 1;
+		tracker = tracker->next;
+	}
+
+	return 0;
+}

@@ -21,7 +21,8 @@ struct ATTRIBUTE {
   /* les autres attributs dont vous pourriez avoir besoin sont déclarés ici */
   float float_val;
   int label_number;
-
+  int offset;
+  
   type type_return;  // Type de retour d'un symbole représentant une fonction
 
 };

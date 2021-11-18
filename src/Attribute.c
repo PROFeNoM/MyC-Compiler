@@ -7,8 +7,3 @@ attribute new_attribute () {
   r  = malloc (sizeof (struct ATTRIBUTE));
   return r;
 };
-
-
-
-
-
