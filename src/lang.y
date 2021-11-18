@@ -173,12 +173,12 @@ else : ELSE                   {printf("\tGOTO(Fin);\nElse:\n");}
 
 // II.4. Iterations
 
-loop : while while_cond inst  {}
+loop : while while_cond inst  {printf("\tGOTO(Loop);\nEnd:\n");}
 ;
 
-while_cond : PO exp PF        {}
+while_cond : PO exp PF        {printf("\tIFN(END);\n");}
 
-while : WHILE                 {}
+while : WHILE                 {printf("Loop:\n");}
 ;
 
 
