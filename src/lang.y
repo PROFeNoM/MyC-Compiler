@@ -71,8 +71,8 @@ fun_head : ID PO PF            {printf("%s() {\n", $1->name);} // erreur si prof
 params: type ID vir params     {}
 | type ID                      {}
 
-vlist: vlist vir ID            {$3->offset = get_offset();printf("LOADI(%d);\n", $3->int_val); set_symbol_value(string_to_sid($3->name), $3);}
-| ID                           {$1->offset = get_offset();printf("LOADI(%d);\n", $1->int_val); set_symbol_value(string_to_sid($1->name), $1);}
+vlist: vlist vir ID            {$3->offset = get_offset();printf("\tLOADI(%d);\n", $3->int_val); set_symbol_value(string_to_sid($3->name), $3);}
+| ID                           {$1->offset = get_offset();printf("\tLOADI(%d);\n", $1->int_val); set_symbol_value(string_to_sid($1->name), $1);}
 ;
 
 vir : VIR                      {}
@@ -137,13 +137,13 @@ af : AF                       {}
 
 // II.1 Affectations
 
-aff : ID EQ exp               {printf("STORE(mp + %d);\n", get_symbol_value($1->name)->offset);}
+aff : ID EQ exp               {printf("\tSTORE(mp + %d);\n", get_symbol_value($1->name)->offset);}
 ;
 
 
 // II.2 Return
-ret : RETURN exp              {if (exists_symbol_value($2->name)) printf("STORE(mp);\n"); printf("EXIT_MAIN;\n");}
-| RETURN PO PF                {printf("EXIT_MAIN;\n");}
+ret : RETURN exp              {if (exists_symbol_value($2->name)) printf("\tSTORE(mp);\n"); printf("\tEXIT_MAIN;\n");}
+| RETURN PO PF                {printf("\tEXIT_MAIN;\n");}
 ;
 
 // II.3. Conditionelles
@@ -152,7 +152,7 @@ ret : RETURN exp              {if (exists_symbol_value($2->name)) printf("STORE(
 //           avec ELSE en entrée (voir y.output)
 
 cond :
-if bool_cond inst elsop       {}
+if bool_cond inst elsop       {printf("Fin:\n\tNOP;\n");}
 ;
 
 // la regle avec else vient avant celle avec vide pour induire une resolution
@@ -162,13 +162,13 @@ elsop : else inst             {}
 |                             {}
 ;
 
-bool_cond : PO exp PF         {}
+bool_cond : PO exp PF         {printf("\tIFN(Else);\n");}
 ;
 
 if : IF                       {}
 ;
 
-else : ELSE                   {}
+else : ELSE                   {printf("\tGOTO(Fin);\nElse:\n");}
 ;
 
 // II.4. Iterations
@@ -185,23 +185,23 @@ while : WHILE                 {}
 // II.3 Expressions
 exp
 // II.3.1 Exp. arithmetiques
-: MOINS exp %prec UNA         {printf("NEGI;\n");}
+: MOINS exp %prec UNA         {printf("\tNEGI;\n");}
          // -x + y lue comme (- x) + y  et pas - (x + y)
-| exp PLUS exp                {printf("ADDI;\n");}
-| exp MOINS exp               {printf("SUBI;\n");}
-| exp STAR exp                {printf("MULTI;\n");}
-| exp DIV exp                 {printf("DIVI\n");}
+| exp PLUS exp                {printf("\tADDI;\n");}
+| exp MOINS exp               {printf("\tSUBI;\n");}
+| exp STAR exp                {printf("\tMULTI;\n");}
+| exp DIV exp                 {printf("\tDIVI\n");}
 | PO exp PF                   {}
-| ID                          {printf("LOAD(mp + %d);\n", get_symbol_value($1->name)->offset);}
+| ID                          {printf("\tLOAD(mp + %d);\n", get_symbol_value($1->name)->offset);}
 | app                         {}
-| NUM                         {printf("LOADI(%d);\n", $1->int_val);}
+| NUM                         {printf("\tLOADI(%d);\n", $1->int_val);}
 
 
 // II.3.2. Booléens
 
 | NOT exp %prec UNA           {}
-| exp INF exp                 {printf("LT;\n");}
-| exp SUP exp                 {printf("GT;\n");}
+| exp INF exp                 {printf("\tLT;\n");}
+| exp SUP exp                 {printf("\tGT;\n");}
 | exp EQUAL exp               {}
 | exp DIFF exp                {}
 | exp AND exp                 {}
@@ -233,6 +233,8 @@ int main () {
    */
 
 printf ("Compiling MyC source code into PCode (Version 2021) !\n\n");
+
+freopen("test.myc", "r", stdin);
 return yyparse ();
  
 } 
