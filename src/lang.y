@@ -45,7 +45,8 @@ void yyerror (char* s) {
 %start prog  
 
 // liste de tous les non terminaux dont vous voulez manipuler l'attribut
-%type <att> exp  typename  type  vlist
+%type <att> exp  typename  type  vlist  cond  if  bool_cond  inst  elsop  else  
+%type <att> loop  while_cond  while
          
 
 %%
@@ -176,33 +177,46 @@ ret : RETURN exp              {if (sid_valid(string_to_sid($2->name))) printf("\
 //           avec ELSE en entrée (voir y.output)
 
 cond :
-if bool_cond inst elsop       {printf("Fin:\n\tNOP;\n");}
+if bool_cond inst elsop       {}
 ;
 
 // la regle avec else vient avant celle avec vide pour induire une resolution
 // adequate du conflit shift / reduce avec ELSE en entrée
 
-elsop : else inst             {}
+elsop : else inst             {printf("Fin%d:\n\tNOP;\n", $1->label_number);}
 |                             {}
 ;
 
-bool_cond : PO exp PF         {printf("\tIFN(Else);\n");}
+bool_cond : PO exp PF         {
+                                $$ = new_attribute();
+                                $$->label_number = new_label();
+                                printf("\tIFN(Else%d);\n", $$->label_number);
+                              }
 ;
 
 if : IF                       {}
 ;
 
-else : ELSE                   {printf("\tGOTO(Fin);\nElse:\n");}
+else : ELSE                   {
+                                $$ = new_attribute();
+                                $$->label_number = new_label();
+                                printf("\tGOTO(Fin%d);\nElse%d:\n", $$->label_number, $<att>-1->label_number);}
 ;
 
 // II.4. Iterations
 
-loop : while while_cond inst  {printf("\tGOTO(Loop);\nEnd:\n");}
+loop : while while_cond inst  {printf("\tGOTO(Loop%d);\nEnd%d:\n", $1->label_number, $2->label_number);}
 ;
 
-while_cond : PO exp PF        {printf("\tIFN(END);\n");}
+while_cond : PO exp PF        {
+                                $$ = new_attribute();
+                                $$->label_number = new_label();
+                                printf("\tIFN(End%d);\n", $$->label_number);}
 
-while : WHILE                 {printf("Loop:\n");}
+while : WHILE                 {
+                                $$ = new_attribute();
+                                $$->label_number = new_label();
+                                printf("Loop%d:\n", $$->label_number);}
 ;
 
 

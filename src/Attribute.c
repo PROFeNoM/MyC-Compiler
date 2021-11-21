@@ -48,6 +48,11 @@ void decrease_scope() {
     scope_level--;
 }
 
+int label_count = 0;
+int new_label() {
+    return label_count++;
+}
+
 void compiler_error(char* str) {
     fprintf(stderr, "ERROR: %s\n", str);
     exit(EXIT_FAILURE);

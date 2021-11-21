@@ -44,6 +44,7 @@ int get_current_scope();
 void increase_scope();
 void decrease_scope();
 
+int new_label();
 
 void compiler_error(char* error_msg);
 
