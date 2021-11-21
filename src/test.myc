@@ -1,29 +1,18 @@
-int main () {
-    return (1+2)*(3+4);
-}
-
-int main () {
-    int x, y, z;
-    x = 3;
-    y = 7;
-    z = x * y;
-
-    return z;
-}
-
-int main () {
-    int x, y;
-    x = 22;
-    if (x > 33) y = 44;
-    else y = 66;
-    return y;
-}
-
-int main () {       
+ int main () {
     int x, y;
     x = 1;
-    while (x < 5) {
-        x = x + 1;
+    { 
+        int x;
+        x = 5;
+        y = 6; 
+        {
+            {
+                x = 2;
+            }
+        }
     }
-    return x;
+    {
+        x = 2;
+    }
+    return y;
  }

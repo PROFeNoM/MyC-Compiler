@@ -25,7 +25,8 @@ attribute get_symbol_value(sid symb_id);
 /* set the value of symbol symb_id to value, return NULL if it fails */
 attribute set_symbol_value(sid symb_id,attribute value);
 
-int get_offset();
+void exit_block();
 
-int exists_symbol_value(sid symb_id);
+void print_st();
+
 #endif

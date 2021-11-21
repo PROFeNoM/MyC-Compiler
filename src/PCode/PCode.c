@@ -10,6 +10,7 @@
 #include "PCode.h"
 #include <stdio.h>
 
+int stack[SIZE];
 
 int sp = 0; // première case libre
 int mp = 0;   // indice de la valeur de retour de la fonction main

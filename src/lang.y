@@ -4,6 +4,7 @@
 #include "Attribute.h"
 #include "PCode/PCode.h"
 
+#define _GNU_SOURCE
 #include <stdio.h>
   
 extern int yylex();
@@ -71,8 +72,20 @@ fun_head : ID PO PF            {printf("%s() {\n", $1->name);} // erreur si prof
 params: type ID vir params     {}
 | type ID                      {}
 
-vlist: vlist vir ID            {$3->offset = get_offset();printf("\tLOADI(%d);\n", $3->int_val); set_symbol_value(string_to_sid($3->name), $3);}
-| ID                           {$1->offset = get_offset();printf("\tLOADI(%d);\n", $1->int_val); set_symbol_value(string_to_sid($1->name), $1);}
+vlist: vlist vir ID            {
+                                $3->offset = get_offset(); 
+                                $3->block_number = get_current_block_number(); 
+                                $3->scope = get_current_scope();
+                                printf("\tLOADI(%d);\n", $3->int_val); 
+                                set_symbol_value(string_to_sid($3->name), $3);
+                                }
+| ID                           {
+                                $1->offset = get_offset(); 
+                                $1->block_number = get_current_block_number(); 
+                                $1->scope = get_current_scope();
+                                printf("\tLOADI(%d);\n", $1->int_val); 
+                                set_symbol_value(string_to_sid($1->name), $1);
+                                }
 ;
 
 vir : VIR                      {}
@@ -128,21 +141,36 @@ exp pv                        {}
 
 // Accolades pour gerer l'entrée et la sortie d'un sous-bloc
 
-ao : AO                       {}
+ao : AO                       {enter_block(); printf("\tENTER_BLOCK(0);\n");}
 ;
 
-af : AF                       {}
+af : AF                       {exit_block(); printf("\tEXIT_BLOCK(0);\n");}
 ;
 
 
 // II.1 Affectations
 
-aff : ID EQ exp               {printf("\tSTORE(mp + %d);\n", get_symbol_value($1->name)->offset);}
+aff : ID EQ exp               {
+                                attribute x;
+                                sid s = string_to_sid($1->name);
+                                if (sid_valid(s)) {
+                                  x = get_symbol_value(s);
+                                  //printf("(%d) Attribute %s declared in block %d (scope %d <= %d) with offset %d in block %d\n",
+                                  //$3->int_val, x->name, x->block_number, x->scope, get_current_scope(), x->offset, get_current_block_number());
+                                  char* str = "mp";
+                                  //print_st();
+                                  for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
+                                      asprintf(&str, "stack[%s - 1]", str);
+                                  printf("\tSTORE(%s + %d);\n", str, x->offset);
+                                } else {
+                                    compiler_error("Can't assign value. Attribute hasn't been declared in this scope.\n");
+                                }
+                              }
 ;
 
 
 // II.2 Return
-ret : RETURN exp              {if (exists_symbol_value($2->name)) printf("\tSTORE(mp);\n"); printf("\tEXIT_MAIN;\n");}
+ret : RETURN exp              {if (sid_valid(string_to_sid($2->name))) printf("\tSTORE(mp);\n"); printf("\tEXIT_MAIN;\n");}
 | RETURN PO PF                {printf("\tEXIT_MAIN;\n");}
 ;
 
@@ -192,7 +220,14 @@ exp
 | exp STAR exp                {printf("\tMULTI;\n");}
 | exp DIV exp                 {printf("\tDIVI\n");}
 | PO exp PF                   {}
-| ID                          {printf("\tLOAD(mp + %d);\n", get_symbol_value($1->name)->offset);}
+| ID                          {
+                                attribute x = get_symbol_value($1->name);
+                                if (!is_attribute_in_block(x)) compiler_error("Attribute hasn't been declared in this scope.\n");
+                                char* str = "mp";
+                                for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
+                                    asprintf(&str, "stack[%s - 1]", str);
+                                printf("\tLOAD(%s + %d);\n", str, x->offset);
+                              }
 | app                         {}
 | NUM                         {printf("\tLOADI(%d);\n", $1->int_val);}
 
@@ -234,7 +269,7 @@ int main () {
 
 printf ("Compiling MyC source code into PCode (Version 2021) !\n\n");
 
-freopen("test.myc", "r", stdin);
+//freopen("test.myc", "r", stdin);
 return yyparse ();
  
 } 
