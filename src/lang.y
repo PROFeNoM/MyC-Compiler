@@ -74,14 +74,12 @@ params: type ID vir params     {}
 
 vlist: vlist vir ID            {
                                 $3->offset = get_offset(); 
-                                $3->block_number = get_current_block_number(); 
                                 $3->scope = get_current_scope();
                                 printf("\tLOADI(%d);\n", $3->int_val); 
                                 set_symbol_value(string_to_sid($3->name), $3);
                                 }
 | ID                           {
                                 $1->offset = get_offset(); 
-                                $1->block_number = get_current_block_number(); 
                                 $1->scope = get_current_scope();
                                 printf("\tLOADI(%d);\n", $1->int_val); 
                                 set_symbol_value(string_to_sid($1->name), $1);
@@ -155,8 +153,6 @@ aff : ID EQ exp               {
                                 sid s = string_to_sid($1->name);
                                 if (sid_valid(s)) {
                                   x = get_symbol_value(s);
-                                  //printf("(%d) Attribute %s declared in block %d (scope %d <= %d) with offset %d in block %d\n",
-                                  //$3->int_val, x->name, x->block_number, x->scope, get_current_scope(), x->offset, get_current_block_number());
                                   char* str = "mp";
                                   //print_st();
                                   for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
@@ -221,8 +217,9 @@ exp
 | exp DIV exp                 {printf("\tDIVI\n");}
 | PO exp PF                   {}
 | ID                          {
-                                attribute x = get_symbol_value($1->name);
-                                if (!is_attribute_in_block(x)) compiler_error("Attribute hasn't been declared in this scope.\n");
+                                sid s = string_to_sid($1->name);
+                                if (!exists_symbol_value(s)) compiler_error("Attribute hasn't been declared in this scope.\n");
+                                attribute x = get_symbol_value(s);
                                 char* str = "mp";
                                 for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
                                     asprintf(&str, "stack[%s - 1]", str);

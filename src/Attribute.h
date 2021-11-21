@@ -22,7 +22,6 @@ struct ATTRIBUTE {
 
   /* les autres attributs dont vous pourriez avoir besoin sont déclarés ici */
   float float_val;
-  int block_number;
   int scope;
   int offset;
   
@@ -40,8 +39,6 @@ int get_offset();
 
 int enter_block();
 int reset_block();
-int get_current_block_number();
-int is_attribute_in_block(attribute x);
 
 int get_current_scope();
 void increase_scope();

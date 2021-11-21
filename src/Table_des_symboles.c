@@ -72,6 +72,18 @@ attribute set_symbol_value(sid symb_id,attribute value) {
 	return symbol_tables[get_current_scope()] -> symbol_value;
 }
 
+int exists_symbol_value(sid symb_id) {
+	for (unsigned int i = 0; symbol_tables[i] != NULL; i++) {
+		elem * tracker = symbol_tables[i];
+		while (tracker) {
+			if (tracker->symbol_name == symb_id)
+				return 1;
+			tracker = tracker->next;
+		}
+	}
+	return 0;
+}
+
 void exit_block() {
 	symbol_tables[get_current_scope()] = NULL;
 	reset_block();
