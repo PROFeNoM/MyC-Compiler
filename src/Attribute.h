@@ -26,6 +26,10 @@ struct ATTRIBUTE {
   int offset;
   
   int label_number;
+  int args_number;
+  int is_in_func;
+  int args_rank;
+  char* function_name;
   type type_return;  // Type de retour d'un symbole représentant une fonction
 
 };
@@ -45,6 +49,10 @@ void increase_scope();
 void decrease_scope();
 
 int new_label();
+
+void increase_args_rank();
+void reset_args_rank();
+int get_args_rank(); 
 
 void compiler_error(char* error_msg);
 

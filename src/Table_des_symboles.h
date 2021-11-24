@@ -31,4 +31,8 @@ void exit_block();
 
 void print_st();
 
+void increase_args();
+void reset_args_number();
+int get_args_number();
+
 #endif

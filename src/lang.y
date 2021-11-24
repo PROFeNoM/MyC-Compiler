@@ -6,7 +6,8 @@
 
 #define _GNU_SOURCE
 #include <stdio.h>
-  
+#include <string.h>
+
 extern int yylex();
 extern int yyparse();
 
@@ -46,7 +47,7 @@ void yyerror (char* s) {
 
 // liste de tous les non terminaux dont vous voulez manipuler l'attribut
 %type <att> exp  typename  type  vlist  cond  if  bool_cond  inst  elsop  else  
-%type <att> loop  while_cond  while
+%type <att> loop  while_cond  while  params  arglist  fun_head
          
 
 %%
@@ -61,27 +62,58 @@ func_list : func_list fun      {}
 
 // I. Functions
 
-fun : fun_type fun_head fun_body        {}
+fun : fun_type fun_head fun_body        {reset_args_rank();}
 ;
 
-fun_type: type                 {printf("%s ", $1->name);}
+fun_type: type                 {}
 
-fun_head : ID PO PF            {printf("%s() {\n", $1->name);} // erreur si profondeur diff zero
-| ID PO params PF              {}
+fun_head : ID PO PF            {
+                                $1->type_val = $<att>0->type_val;
+                                set_symbol_value(string_to_sid($1->name), $1);
+                                if (strcmp($1->name, "main"))
+                                    printf("void %s_pcode() {\n", $1->name);
+                                else
+                                    printf("int main() {\n");
+                                $$ = $1;} // erreur si profondeur diff zero
+| ID PO params PF              {
+                                $1->type_val = $<att>0->type_val;
+                                $1->args_number = get_args_number();
+                                set_symbol_value(string_to_sid($1->name), $1);
+                                if (strcmp($1->name, "main"))
+                                    printf("void %s_pcode() {\n", $1->name);
+                                else
+                                    printf("int main() {\n");
+                                reset_args_number();
+                                $$ = $1;}
 ;
 
-params: type ID vir params     {}
-| type ID                      {}
+params: type ID vir params     {
+                                increase_args();
+                                $2->type_val = $1->type_val;
+                                $2->is_in_func = 1;
+                                $2->args_rank = get_args_rank();
+                                increase_args_rank();
+                                set_symbol_value(string_to_sid($2->name), $2);}
+| type ID                      {
+                                increase_args();
+                                $2->type_val = $1->type_val;
+                                $2->is_in_func = 1;
+                                $2->args_rank = get_args_rank();
+                                increase_args_rank();
+                                set_symbol_value(string_to_sid($2->name), $2);}
 
 vlist: vlist vir ID            {
+                                $3->type_val = $<att>0->type_val;
                                 $3->offset = get_offset(); 
                                 $3->scope = get_current_scope();
                                 printf("\tLOADI(%d);\n", $3->int_val); 
                                 set_symbol_value(string_to_sid($3->name), $3);
                                 }
 | ID                           {
+                                $1->type_val = $<att>0->type_val;
                                 $1->offset = get_offset(); 
                                 $1->scope = get_current_scope();
+                                $$ = $1;
                                 printf("\tLOADI(%d);\n", $1->int_val); 
                                 set_symbol_value(string_to_sid($1->name), $1);
                                 }
@@ -90,7 +122,13 @@ vlist: vlist vir ID            {
 vir : VIR                      {}
 ;
 
-fun_body : AO block AF         {printf("}\n");}
+fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) 
+                                    printf("}");
+                                else {
+                                    printf("\tSTORE(mp);\n"); 
+                                    printf("\tEXIT_MAIN;\n");
+                                    printf("}\n");
+                                }}
 ;
 
 // Block
@@ -155,7 +193,6 @@ aff : ID EQ exp               {
                                 if (sid_valid(s)) {
                                   x = get_symbol_value(s);
                                   char* str = "mp";
-                                  //print_st();
                                   for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
                                       asprintf(&str, "stack[%s - 1]", str);
                                   printf("\tSTORE(%s + %d);\n", str, x->offset);
@@ -167,7 +204,7 @@ aff : ID EQ exp               {
 
 
 // II.2 Return
-ret : RETURN exp              {if (sid_valid(string_to_sid($2->name))) printf("\tSTORE(mp);\n"); printf("\tEXIT_MAIN;\n");}
+ret : RETURN exp              {/*if (sid_valid(string_to_sid($2->name))) printf("\tSTORE(mp);\n"); printf("\tEXIT_MAIN;\n");*/}
 | RETURN PO PF                {printf("\tEXIT_MAIN;\n");}
 ;
 
@@ -183,24 +220,25 @@ if bool_cond inst elsop       {}
 // la regle avec else vient avant celle avec vide pour induire une resolution
 // adequate du conflit shift / reduce avec ELSE en entrée
 
-elsop : else inst             {printf("Fin%d:\n\tNOP;\n", $1->label_number);}
+elsop : else inst             {printf("Fin%d:\n\tNOP;\n", $<att>-2->label_number);}
 |                             {}
 ;
 
 bool_cond : PO exp PF         {
                                 $$ = new_attribute();
-                                $$->label_number = new_label();
-                                printf("\tIFN(Else%d);\n", $$->label_number);
+                                $$->label_number = $<att>0->label_number;
+                                printf("\tIFN(Else%d);\n", $<att>0->label_number);
                               }
 ;
 
-if : IF                       {}
+if : IF                       {$$ = new_attribute();
+                                $$->label_number = new_label();}
 ;
 
 else : ELSE                   {
                                 $$ = new_attribute();
-                                $$->label_number = new_label();
-                                printf("\tGOTO(Fin%d);\nElse%d:\n", $$->label_number, $<att>-1->label_number);}
+                                $$->label_number = $<att>-2->label_number;
+                                printf("\tGOTO(Fin%d);\nElse%d:\n", $$->label_number, $<att>-2->label_number);}
 ;
 
 // II.4. Iterations
@@ -210,7 +248,7 @@ loop : while while_cond inst  {printf("\tGOTO(Loop%d);\nEnd%d:\n", $1->label_num
 
 while_cond : PO exp PF        {
                                 $$ = new_attribute();
-                                $$->label_number = new_label();
+                                $$->label_number = $<att>0->label_number;
                                 printf("\tIFN(End%d);\n", $$->label_number);}
 
 while : WHILE                 {
@@ -237,7 +275,10 @@ exp
                                 char* str = "mp";
                                 for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
                                     asprintf(&str, "stack[%s - 1]", str);
-                                printf("\tLOAD(%s + %d);\n", str, x->offset);
+                                if (x->is_in_func)
+                                    printf("\tLOAD(mp -1 -%d)\n", x->args_rank);
+                                else 
+                                    printf("\tLOAD(%s + %d);\n", str, x->offset);
                               }
 | app                         {}
 | NUM                         {printf("\tLOADI(%d);\n", $1->int_val);}
@@ -257,7 +298,10 @@ exp
 
 // II.4 Applications de fonctions
 
-app : ID PO args PF           {}
+app : ID PO args PF           {
+                                printf("\tENTER_BLOCK(%d)\n", get_symbol_value(string_to_sid($1->name))->args_number);
+                                printf("\t%s_pcode()\n", $1->name);
+                                printf("\tEXIT_BLOCK(%d)\n", get_symbol_value(string_to_sid($1->name))->args_number);}
 ;
 
 args :  arglist               {}
@@ -284,4 +328,3 @@ printf ("Compiling MyC source code into PCode (Version 2021) !\n\n");
 return yyparse ();
  
 } 
-

@@ -100,3 +100,14 @@ void print_st() {
 		printf("\n");
 	}
 }
+
+int args_count = 0;
+void increase_args() {
+	args_count++;
+}
+void reset_args_number() {
+	args_count = 0;
+}
+int get_args_number() {
+	return args_count;
+}

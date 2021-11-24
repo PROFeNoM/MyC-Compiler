@@ -1,0 +1,6 @@
+src/PCode/PCode.o
+src/y.tab.c
+src/y.tab.h
+src/lang
+src/lex.yy.c
+src/y.output

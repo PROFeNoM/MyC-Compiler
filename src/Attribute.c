@@ -53,6 +53,17 @@ int new_label() {
     return label_count++;
 }
 
+int args_rank_count = 1;
+void increase_args_rank() {
+    args_rank_count++;
+}
+void reset_args_rank() {
+    args_rank_count = 1;
+}
+int get_args_rank() {
+    return args_rank_count;
+}
+
 void compiler_error(char* str) {
     fprintf(stderr, "ERROR: %s\n", str);
     exit(EXIT_FAILURE);
