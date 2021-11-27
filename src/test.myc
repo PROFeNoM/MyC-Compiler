@@ -1,10 +1,7 @@
-int main () {
-    int x, y;
-    x = 1;
-    if (x < 2) x = 1;
-    else y = 3;
-    if (x > 2) x = 3;
-    else x = 2;
+int sum (int m, int n) {
+    return (m+n);
+}
 
-    return x;
+int main () {
+    return (sum(1, sum(2, 3)));
 }

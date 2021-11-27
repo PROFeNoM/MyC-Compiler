@@ -24,6 +24,8 @@
 "!="                     { return DIFF;}
 "<"                      { return INF;}
 ">"                      { return SUP;}
+"<="                     { return INFEQ;}
+">="                     { return SUPEQ;}
 
 "("                      { return PO;}
 ")"                      { return PF;}

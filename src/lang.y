@@ -33,13 +33,13 @@ void yyerror (char* s) {
 %token PLUS MOINS STAR DIV
 %token DOT ARR
 
-%left OR                       // higher priority on ||
-%left AND                      // higher priority on &&
-%left DIFF EQUAL SUP INF       // higher priority on comparison
-%left PLUS MOINS               // higher priority on + - 
-%left STAR DIV                 // higher priority on * /
-%left DOT ARR                  // higher priority on . and -> 
-%nonassoc UNA                  // highest priority on unary operator
+%left OR                                  // higher priority on ||
+%left AND                                 // higher priority on &&
+%left DIFF EQUAL SUP INF SUPEQ INFEQ      // higher priority on comparison
+%left PLUS MOINS                          // higher priority on + - 
+%left STAR DIV                            // higher priority on * /
+%left DOT ARR                             // higher priority on . and -> 
+%nonassoc UNA                             // highest priority on unary operator
 %nonassoc ELSE
 
 
@@ -123,7 +123,7 @@ vir : VIR                      {}
 ;
 
 fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) 
-                                    printf("}");
+                                    printf("}\n");
                                 else {
                                     printf("\tSTORE(mp);\n"); 
                                     printf("\tEXIT_MAIN;\n");
@@ -289,6 +289,8 @@ exp
 | NOT exp %prec UNA           {}
 | exp INF exp                 {printf("\tLT;\n");}
 | exp SUP exp                 {printf("\tGT;\n");}
+| exp INFEQ exp               {printf("\tLEQ;\n");}
+| exp SUPEQ exp               {printf("\tGEQ;\n");}
 | exp EQUAL exp               {}
 | exp DIFF exp                {}
 | exp AND exp                 {}
@@ -299,17 +301,23 @@ exp
 // II.4 Applications de fonctions
 
 app : ID PO args PF           {
-                                printf("\tENTER_BLOCK(%d)\n", get_symbol_value(string_to_sid($1->name))->args_number);
+                                attribute x = get_symbol_value(string_to_sid($1->name));
+                                if ($<att>3->args_number < x->args_number)
+                                    compiler_error("Not enough arguments for function\n");
+                                if ($<att>3->args_number > x->args_number)
+                                    compiler_error("Too many arguments for function\n");
+                                printf("\tENTER_BLOCK(%d)\n", x->args_number);
                                 printf("\t%s_pcode()\n", $1->name);
-                                printf("\tEXIT_BLOCK(%d)\n", get_symbol_value(string_to_sid($1->name))->args_number);}
+                                printf("\tEXIT_BLOCK(%d)\n", x->args_number);}
 ;
 
 args :  arglist               {}
 |                             {}
 ;
 
-arglist : exp VIR arglist     {}
-| exp                         {}
+arglist : exp VIR arglist     { $$->args_number++; 
+                                $<att>-1->args_number = $$->args_number;}
+| exp                         { $<att>0->args_number = 1; $$ = $<att>0;}
 ;
 
 
