@@ -270,9 +270,9 @@ while : WHILE                 {
 
 
 // II.3 Expressions
-exp
+exp:
 // II.3.1 Exp. arithmetiques
-: MOINS exp %prec UNA         {printf("\tNEGI;\n");}
+ MOINS exp %prec UNA         {printf("\tNEGI;\n");}
          // -x + y lue comme (- x) + y  et pas - (x + y)
 | exp PLUS exp                {printf("\tADDI;\n");}
 | exp MOINS exp               {printf("\tSUBI;\n");}

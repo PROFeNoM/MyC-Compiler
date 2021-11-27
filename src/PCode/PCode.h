@@ -63,6 +63,10 @@ extern int mp;
 
 #define SUBI stack[sp - 2] = stack[sp - 2] - stack[sp - 1]; sp--
 
+#define DIVI stack[sp - 2] = stack[sp - 2] / stack[sp - 1]; sp--
+
+#define NEGI stack[sp - 1] = - stack[sp - 1];
+
 // Comparaisons
 
 #define LT stack[sp - 2] = stack[sp - 2] < stack[sp - 1]; sp--
