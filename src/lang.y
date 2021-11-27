@@ -29,7 +29,7 @@ void yyerror (char* s) {
 %token RETURN VOID EQ
 %token <att> IF ELSE WHILE
 
-%token <att> AND OR NOT DIFF EQUAL SUP INF
+%token <att> AND OR NOT DIFF EQUAL SUP INF SUPEQ INFEQ
 %token PLUS MOINS STAR DIV
 %token DOT ARR
 
@@ -62,7 +62,7 @@ func_list : func_list fun      {}
 
 // I. Functions
 
-fun : fun_type fun_head fun_body        {reset_args_rank();}
+fun : fun_type fun_head fun_body        {reset_args_rank(); }
 ;
 
 fun_type: type                 {}
@@ -123,7 +123,7 @@ vir : VIR                      {}
 ;
 
 fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) 
-                                    printf("}\n");
+                                    printf("}\n\n");
                                 else {
                                     printf("\tSTORE(mp);\n"); 
                                     printf("\tEXIT_MAIN;\n");
@@ -306,9 +306,9 @@ app : ID PO args PF           {
                                     compiler_error("Not enough arguments for function\n");
                                 if ($<att>3->args_number > x->args_number)
                                     compiler_error("Too many arguments for function\n");
-                                printf("\tENTER_BLOCK(%d)\n", x->args_number);
-                                printf("\t%s_pcode()\n", $1->name);
-                                printf("\tEXIT_BLOCK(%d)\n", x->args_number);}
+                                printf("\tENTER_BLOCK(%d);\n", x->args_number);
+                                printf("\t%s_pcode();\n", $1->name);
+                                printf("\tEXIT_BLOCK(%d);\n", x->args_number);}
 ;
 
 args :  arglist               {}
@@ -330,7 +330,7 @@ int main () {
      sur ce fichier pour lancer dessus la compilation.
    */
 
-printf ("Compiling MyC source code into PCode (Version 2021) !\n\n");
+printf("#include \"PCode.h\"\n#include <stdio.h>\n\n");
 
 //freopen("test.myc", "r", stdin);
 return yyparse ();
