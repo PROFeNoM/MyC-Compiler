@@ -63,8 +63,3 @@ void reset_args_rank() {
 int get_args_rank() {
     return args_rank_count;
 }
-
-void compiler_error(char* str) {
-    fprintf(stderr, "ERROR: %s\n", str);
-    exit(EXIT_FAILURE);
-};

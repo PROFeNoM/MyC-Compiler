@@ -8,12 +8,23 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <stdarg.h>
+
 extern int yylex();
 extern int yyparse();
 
 void yyerror (char* s) {
   printf ("%s\n",s);
-  }
+}
+
+void compiler_error(const char* error_msg, ...) {
+    va_list args;
+    fprintf(stderr, "Error: ");
+    va_start(args, error_msg);
+    vfprintf(stderr, error_msg, args);
+    va_end(args);
+    fprintf(stderr, "\n");
+}
 		
 
 %}
@@ -197,7 +208,7 @@ aff : ID EQ exp               {
                                       asprintf(&str, "stack[%s - 1]", str);
                                   printf("\tSTORE(%s + %d);\n", str, x->offset);
                                 } else {
-                                    compiler_error("Can't assign value. Attribute hasn't been declared in this scope.\n");
+                                    compiler_error("Can't assign value %d to %s. Attribute hasn't been declared in this scope.\n", $3->int_val, $1->name);
                                 }
                               }
 ;
@@ -270,13 +281,14 @@ exp
 | PO exp PF                   {}
 | ID                          {
                                 sid s = string_to_sid($1->name);
-                                if (!exists_symbol_value(s)) compiler_error("Attribute hasn't been declared in this scope.\n");
+                                if (!exists_symbol_value(s)) 
+                                        compiler_error("Attribute %s hasn't been declared in this scope.\n", $1->name);
                                 attribute x = get_symbol_value(s);
                                 char* str = "mp";
                                 for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
                                     asprintf(&str, "stack[%s - 1]", str);
                                 if (x->is_in_func)
-                                    printf("\tLOAD(mp -1 -%d)\n", x->args_rank);
+                                    printf("\tLOAD(mp - 1 - %d)\n", x->args_rank);
                                 else 
                                     printf("\tLOAD(%s + %d);\n", str, x->offset);
                               }
@@ -303,21 +315,22 @@ exp
 app : ID PO args PF           {
                                 attribute x = get_symbol_value(string_to_sid($1->name));
                                 if ($<att>3->args_number < x->args_number)
-                                    compiler_error("Not enough arguments for function\n");
+                                    compiler_error("Not enough arguments for function %s. Expected %d, got %d.\n", $1->name, x->args_number, $<att>3->args_number);
                                 if ($<att>3->args_number > x->args_number)
-                                    compiler_error("Too many arguments for function\n");
+                                    compiler_error("Too many arguments for function %s. Expected %d, got %d\n", $1->name, x->args_number, $<att>3->args_number);
                                 printf("\tENTER_BLOCK(%d);\n", x->args_number);
                                 printf("\t%s_pcode();\n", $1->name);
-                                printf("\tEXIT_BLOCK(%d);\n", x->args_number);}
+                                printf("\tEXIT_BLOCK(%d);\n", x->args_number);
+                                }
 ;
 
 args :  arglist               {}
 |                             {}
 ;
 
-arglist : exp VIR arglist     { $$->args_number++; 
+arglist : exp VIR arglist     { $$->args_number++;
                                 $<att>-1->args_number = $$->args_number;}
-| exp                         { $<att>0->args_number = 1; $$ = $<att>0;}
+| exp                         { $<att>-1->args_number = 1; $$ = $<att>-1;}
 ;
 
 
