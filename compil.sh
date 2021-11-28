@@ -1,4 +1,3 @@
-make clean
 make
 FULL_PATH=$1
 FILENAME=$(basename -- "$FULL_PATH")

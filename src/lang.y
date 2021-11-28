@@ -232,7 +232,7 @@ if bool_cond inst elsop       {}
 // adequate du conflit shift / reduce avec ELSE en entrée
 
 elsop : else inst             {printf("Fin%d:\n\tNOP;\n", $<att>-2->label_number);}
-|                             {}
+|                             {printf("Else%d:\n\tNOP;\n", $<att>-2->label_number);}
 ;
 
 bool_cond : PO exp PF         {
@@ -298,15 +298,15 @@ exp:
 
 // II.3.2. Booléens
 
-| NOT exp %prec UNA           {}
+| NOT exp %prec UNA           {printf("\tNT;\n");}
 | exp INF exp                 {printf("\tLT;\n");}
 | exp SUP exp                 {printf("\tGT;\n");}
 | exp INFEQ exp               {printf("\tLEQ;\n");}
 | exp SUPEQ exp               {printf("\tGEQ;\n");}
-| exp EQUAL exp               {}
-| exp DIFF exp                {}
-| exp AND exp                 {}
-| exp OR exp                  {}
+| exp EQUAL exp               {printf("\tEQL;\n");}
+| exp DIFF exp                {printf("\tNEQ;\n");}
+| exp AND exp                 {printf("\tANDI;\n");}
+| exp OR exp                  {printf("\tORI;\n");}
 
 ;
 

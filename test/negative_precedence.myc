@@ -1,0 +1,7 @@
+int sum (int m, int n) {
+    return (m+n);
+}
+
+int main () {
+    return (sum(sum(14, 3), sum(-14, -3)));
+}

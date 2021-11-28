@@ -69,6 +69,8 @@ extern int mp;
 
 // Comparaisons
 
+#define NT stack[sp - 1] = ! stack[sp - 1];
+
 #define LT stack[sp - 2] = stack[sp - 2] < stack[sp - 1]; sp--
 
 #define GT stack[sp - 2] = stack[sp - 2] > stack[sp - 1]; sp--
@@ -76,6 +78,14 @@ extern int mp;
 #define LEQ stack[sp - 2] = stack[sp - 2] <= stack[sp - 1]; sp--
 
 #define GEQ stack[sp - 2] = stack[sp - 2] >= stack[sp - 1]; sp--
+
+#define EQL stack[sp - 2] = stack[sp - 2] == stack[sp - 1]; sp--
+
+#define NEQ stack[sp - 2] = stack[sp - 2] != stack[sp - 1]; sp--
+
+#define ANDI stack[sp - 2] = stack[sp - 2] && stack[sp - 1]; sp--
+
+#define ORI stack[sp - 2] = stack[sp - 2] || stack[sp - 1]; sp--
 
 /*************************** Branchements ******************/
 // La condition est en sommet de pile et elle est dépilée après le test

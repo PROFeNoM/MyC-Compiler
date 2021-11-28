@@ -4,3 +4,13 @@ src/y.tab.h
 src/lang
 src/lex.yy.c
 src/y.output
+.vscode/targets.log
+.gitignore
+.vscode/dryrun.log
+.vscode/settings.json
+.gitignore
+.idea/vcs.xml
+.idea/if204-projetdecompilation-14272.iml
+.idea/modules.xml
+.vscode/configurationCache.log
+.gitignore
