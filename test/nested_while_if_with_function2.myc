@@ -1,0 +1,12 @@
+int decrement(int n){
+    return n - 1;
+}
+
+void main() {
+    int x;
+    x = 12;
+    while(x > 0) {
+        x = x - 1;
+        if (x < 10) return x;
+    }
+}

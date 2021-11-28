@@ -92,7 +92,7 @@ void exit_block() {
 void print_st() {
 	for (unsigned int i = 0; symbol_tables[i] != NULL; i++) {
 		elem * tracker = symbol_tables[i];
-		printf("[%d]", i);
+		printf("//[%d]", i);
 		while (tracker) {
 			printf("-> %s", tracker->symbol_name);
 			tracker = tracker->next;

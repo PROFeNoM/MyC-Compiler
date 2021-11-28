@@ -136,8 +136,8 @@ vir : VIR                      {}
 fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) 
                                     printf("}\n\n");
                                 else {
-                                    printf("\tSTORE(mp);\n"); 
-                                    printf("\tEXIT_MAIN;\n");
+                                    //printf("\tSTORE(mp);\n"); 
+                                    //printf("\tEXIT_MAIN;\n");
                                     printf("}\n");
                                 }}
 ;
@@ -215,8 +215,8 @@ aff : ID EQ exp               {
 
 
 // II.2 Return
-ret : RETURN exp              {/*if (sid_valid(string_to_sid($2->name))) printf("\tSTORE(mp);\n"); printf("\tEXIT_MAIN;\n");*/}
-| RETURN PO PF                {printf("\tEXIT_MAIN;\n");}
+ret : RETURN exp              {if (exists_symbol_value(string_to_sid("main"))) printf("\tSTORE(mp);\n\tEXIT_MAIN;\n"); else printf("\treturn;\n");}
+| RETURN PO PF                {printf("\ttSTORE(mp);\n\tEXIT_MAIN;\n");}
 ;
 
 // II.3. Conditionelles
@@ -254,7 +254,7 @@ else : ELSE                   {
 
 // II.4. Iterations
 
-loop : while while_cond inst  {printf("\tGOTO(Loop%d);\nEnd%d:\n", $1->label_number, $2->label_number);}
+loop : while while_cond inst  {printf("\tGOTO(Loop%d);\nEnd%d:\n\tNOP;\n", $1->label_number, $2->label_number);}
 ;
 
 while_cond : PO exp PF        {
