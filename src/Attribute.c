@@ -34,6 +34,10 @@ int get_offset()
 {
 	return offsets[get_current_block_number()]++;
 }
+void reset_offset()
+{
+  offsets[get_current_block_number()] = 0;
+}
 
 int scope_level = 0;
 int get_current_scope() {

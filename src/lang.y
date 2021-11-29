@@ -19,11 +19,11 @@ void yyerror (char* s) {
 
 void compiler_error(const char* error_msg, ...) {
     va_list args;
-    fprintf(stderr, "Error: ");
+    fprintf(stdout, "Error: ");
     va_start(args, error_msg);
-    vfprintf(stderr, error_msg, args);
+    vfprintf(stdout, error_msg, args);
     va_end(args);
-    fprintf(stderr, "\n");
+    fprintf(stdout, "\n");
 }
 		
 
@@ -58,7 +58,7 @@ void compiler_error(const char* error_msg, ...) {
 
 // liste de tous les non terminaux dont vous voulez manipuler l'attribut
 %type <att> exp  typename  type  vlist  cond  if  bool_cond  inst  elsop  else  
-%type <att> loop  while_cond  while  params  arglist  fun_head
+%type <att> loop  while_cond  while  params  arglist  fun_head  args
          
 
 %%
@@ -83,8 +83,10 @@ fun_head : ID PO PF            {
                                 set_symbol_value(string_to_sid($1->name), $1);
                                 if (strcmp($1->name, "main"))
                                     printf("void %s_pcode() {\n", $1->name);
-                                else
+                                else {
+                                    reset_offset();
                                     printf("int main() {\n");
+                                }
                                 $$ = $1;} // erreur si profondeur diff zero
 | ID PO params PF              {
                                 $1->type_val = $<att>0->type_val;
@@ -189,10 +191,19 @@ exp pv                        {}
 
 // Accolades pour gerer l'entrée et la sortie d'un sous-bloc
 
-ao : AO                       {enter_block(); printf("\tENTER_BLOCK(0);\n");}
+ao : AO                         {
+                                reset_return_flag();
+                                enter_block(); 
+                                printf("\tENTER_BLOCK(0);\n");
+                                }
 ;
 
-af : AF                       {exit_block(); printf("\tEXIT_BLOCK(0);\n");}
+af : AF                         {
+                                exit_block(); 
+                                if(is_return_seen()) printf("\tEXIT_BLOCK(0);\n");
+                                else printf("\tEXIT_BLOCK_NO_RETURN(0);\n");
+                                reset_return_flag();
+                                }
 ;
 
 
@@ -206,7 +217,10 @@ aff : ID EQ exp               {
                                   char* str = "mp";
                                   for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
                                       asprintf(&str, "stack[%s - 1]", str);
-                                  printf("\tSTORE(%s + %d);\n", str, x->offset);
+                                  if (x->is_in_func)
+                                    printf("\tSTORE(mp - 1 - %d)\n", x->args_rank);                                        
+                                  else
+                                    printf("\tSTORE(%s + %d);\n", str, x->offset);
                                 } else {
                                     compiler_error("Can't assign value %d to %s. Attribute hasn't been declared in this scope.\n", $3->int_val, $1->name);
                                 }
@@ -215,8 +229,8 @@ aff : ID EQ exp               {
 
 
 // II.2 Return
-ret : RETURN exp              {if (exists_symbol_value(string_to_sid("main"))) printf("\tSTORE(mp);\n\tEXIT_MAIN;\n"); else printf("\treturn;\n");}
-| RETURN PO PF                {printf("\ttSTORE(mp);\n\tEXIT_MAIN;\n");}
+ret : RETURN exp              {return_seen(); if (exists_symbol_value(string_to_sid("main"))) printf("\tSTORE(mp);\n\tEXIT_MAIN;\n"); else printf("\treturn;\n");}
+| RETURN PO PF                {return_seen(); printf("\ttSTORE(mp);\n\tEXIT_MAIN;\n");}
 ;
 
 // II.3. Conditionelles
@@ -313,19 +327,22 @@ exp:
 // II.4 Applications de fonctions
 
 app : ID PO args PF           {
+                                if (!exists_symbol_value(string_to_sid($1->name)))
+                                    compiler_error("Unknown function %s", $1->name);
                                 attribute x = get_symbol_value(string_to_sid($1->name));
                                 if ($<att>3->args_number < x->args_number)
-                                    compiler_error("Not enough arguments for function %s. Expected %d, got %d.\n", $1->name, x->args_number, $<att>3->args_number);
+                                    compiler_error("Not enougth arguments for function %s. Expected %d, got %d.\n", $1->name, x->args_number, $<att>3->args_number);
                                 if ($<att>3->args_number > x->args_number)
                                     compiler_error("Too many arguments for function %s. Expected %d, got %d\n", $1->name, x->args_number, $<att>3->args_number);
                                 printf("\tENTER_BLOCK(%d);\n", x->args_number);
                                 printf("\t%s_pcode();\n", $1->name);
                                 printf("\tEXIT_BLOCK(%d);\n", x->args_number);
                                 }
+
 ;
 
 args :  arglist               {}
-|                             {}
+|                             {$$ = new_attribute(); $$->args_number = 0;}
 ;
 
 arglist : exp VIR arglist     { $$->args_number++;

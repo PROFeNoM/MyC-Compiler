@@ -138,7 +138,7 @@ extern int mp;
 
 
 // restore le sommet de pile (uniquement pour la fin de la fonction main)
-#define EXIT_MAIN sp = mp+1
+#define EXIT_MAIN sp = mp+1; printf("%d\n", stack[mp]); return stack[mp];
 
 // sauvegarde le mark pointeur et en définit un nouveau
 #define ENTER_BLOCK(N) stack[sp++] = mp; mp = sp
@@ -157,6 +157,7 @@ extern int mp;
 */
 
 #define EXIT_BLOCK(N) mp = stack[mp-1];stack[sp-N-2]=stack[sp-1];sp-= N+1
+#define EXIT_BLOCK_NO_RETURN(N) mp = stack[mp-1];sp-= N+1
 
 /*
 

@@ -50,7 +50,7 @@
 [0-9]+                   { yylval.att = new_attribute();
 	        	   yylval.att -> int_val =  atoi (yytext);
                            return NUM; }
-[A-Za-z][A-Za-z0-9]*     { yylval.att = new_attribute();
+[A-Za-z][A-Za-z0-9_]*     { yylval.att = new_attribute();
                            yylval.att -> name = string_to_sid(yytext);
 		           return ID; }
 [ \t\n]                   { /* on avale sans rendre la main */; }

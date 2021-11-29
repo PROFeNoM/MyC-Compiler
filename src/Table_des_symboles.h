@@ -35,4 +35,8 @@ void increase_args();
 void reset_args_number();
 int get_args_number();
 
+void return_seen();
+int is_return_seen();
+void reset_return_flag();
+
 #endif

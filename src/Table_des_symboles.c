@@ -111,3 +111,15 @@ void reset_args_number() {
 int get_args_number() {
 	return args_count;
 }
+
+int return_flag[MAX_BLOCKS] = { 0 };
+
+void return_seen() {
+	return_flag[get_current_scope()] = 1;
+}
+int is_return_seen() {
+	return return_flag[get_current_scope()];
+}
+void reset_return_flag() {
+	return_flag[get_current_scope()] = 0;
+}

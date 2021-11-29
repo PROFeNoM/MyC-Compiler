@@ -39,6 +39,7 @@ attribute new_attribute ();
 /* returns the pointeur to a newly allocated (but uninitialized) attribute value structure */
 
 int get_offset();
+void reset_offset();
 
 int enter_block();
 int reset_block();
