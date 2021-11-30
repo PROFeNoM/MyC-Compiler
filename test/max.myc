@@ -1,0 +1,16 @@
+int max(int a, int b, int c) {
+    int result;
+    result = a;
+    if (b > result) result = b;
+    if (c > result) result = c;
+}
+
+int main() {
+    int two, minusTwo, four;
+    two = max(0, 1, 2);
+    minusTwo = max(-10283, -3, -2);
+    four = max(-1, 2, 4);
+
+    if (max(two, minusTwo, four) != 4) return 0;
+    return 1;
+}
