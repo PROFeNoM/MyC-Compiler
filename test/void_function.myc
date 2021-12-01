@@ -1,6 +1,4 @@
-void noReturnFunction() {
-    ;
-}
+
 
 void no_return_function_with_params(int n) {
     n = n;
@@ -10,7 +8,7 @@ int main() {
     int x, n;
     x = 2;
     n = 4;
-    noReturnFunction();
+
     no_return_function_with_params(n);
 
     return x * n;
