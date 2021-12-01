@@ -143,6 +143,7 @@ fun_body : AO block AF         {if (strcmp($<att>0->name, "main"))
                                 else {
                                     //printf("\tSTORE(mp);\n"); 
                                     //printf("\tEXIT_MAIN;\n");
+                                    printf("FinMain:\n\tNOP;\n");
                                     printf("}\n");
                                 }}
 ;
@@ -232,8 +233,8 @@ aff : ID EQ exp               {
 
 
 // II.2 Return
-ret : RETURN exp              {return_seen(); if (exists_symbol_value(string_to_sid("main"))) printf("\tSTORE(mp);\n\tEXIT_MAIN;\n"); else printf("\treturn;\n");}
-| RETURN PO PF                {return_seen(); printf("\ttSTORE(mp);\n\tEXIT_MAIN;\n");}
+ret : RETURN exp              {return_seen(); if (exists_symbol_value(string_to_sid("main"))) printf("\tSTORE(mp);\n\tEXIT_MAIN;\n\tGOTO(FinMain);\n"); else printf("\treturn;\n");}
+| RETURN PO PF                {return_seen(); printf("\ttSTORE(mp);\n\tEXIT_MAIN;\n\tGOTO(FinMain);\n");}
 ;
 
 // II.3. Conditionelles
