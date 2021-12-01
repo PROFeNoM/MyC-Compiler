@@ -138,15 +138,19 @@ vlist: vlist vir ID            {
 vir : VIR                      {}
 ;
 
-fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) 
+fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) {
+                                    if (!strcmp($<att>0->type_return, "void") && is_return_seen())
+                                        compiler_error("Function %s is void but has a return statement.\n", $<att>0->name);
                                     printf("}\n\n");
+                                }
                                 else {
                                     //printf("\tSTORE(mp);\n"); 
                                     //printf("\tEXIT_MAIN;\n");
                                     printf("FinMain:\n\tNOP;\n");
                                     printf("\n\tprint_stack();\n\n");
                                     printf("}\n");
-                                }}
+                                }
+                                reset_return_flag();}
 ;
 
 // Block
