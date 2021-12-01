@@ -80,6 +80,8 @@ fun_type: type                 {}
 
 fun_head : ID PO PF            {
                                 $1->type_val = $<att>0->type_val;
+                                $1->args_number = 0;
+                                $1->type_return = $<att>0->name;
                                 set_symbol_value(string_to_sid($1->name), $1);
                                 if (strcmp($1->name, "main"))
                                     printf("void %s_pcode() {\n", $1->name);
@@ -91,6 +93,7 @@ fun_head : ID PO PF            {
 | ID PO params PF              {
                                 $1->type_val = $<att>0->type_val;
                                 $1->args_number = get_args_number();
+                                $1->type_return = $<att>0->name;
                                 set_symbol_value(string_to_sid($1->name), $1);
                                 if (strcmp($1->name, "main"))
                                     printf("void %s_pcode() {\n", $1->name);
@@ -336,7 +339,10 @@ app : ID PO args PF           {
                                     compiler_error("Too many arguments for function %s. Expected %d, got %d\n", $1->name, x->args_number, $<att>3->args_number);
                                 printf("\tENTER_BLOCK(%d);\n", x->args_number);
                                 printf("\t%s_pcode();\n", $1->name);
-                                printf("\tEXIT_BLOCK(%d);\n", x->args_number);
+                                if (strcmp(x->type_return, "void")) 
+                                    printf("\tEXIT_BLOCK(%d);\n", x->args_number);
+                                else
+                                    printf("\tEXIT_BLOCK_NO_RETURN(%d);\n", x->args_number);
                                 }
 
 ;

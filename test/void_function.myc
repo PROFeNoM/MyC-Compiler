@@ -1,6 +1,5 @@
 void noReturnFunction() {
-    int x;
-    x = 2;
+    ;
 }
 
 void no_return_function_with_params(int n) {
