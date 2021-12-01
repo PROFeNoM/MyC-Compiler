@@ -144,6 +144,7 @@ fun_body : AO block AF         {if (strcmp($<att>0->name, "main"))
                                     //printf("\tSTORE(mp);\n"); 
                                     //printf("\tEXIT_MAIN;\n");
                                     printf("FinMain:\n\tNOP;\n");
+                                    printf("\n\tprint_stack();\n\n");
                                     printf("}\n");
                                 }}
 ;
@@ -222,9 +223,9 @@ aff : ID EQ exp               {
                                   for (unsigned int i = 0; i < get_current_scope() - x->scope; i++)
                                       asprintf(&str, "stack[%s - 1]", str);
                                   if (x->is_in_func)
-                                    printf("\tSTORE(mp - 1 - %d)\n", x->args_rank);                                        
+                                    printf("\tSTORE(mp - 1 - %d)\n\n\tprint_stack();\n\n", x->args_rank);                                        
                                   else
-                                    printf("\tSTORE(%s + %d);\n", str, x->offset);
+                                    printf("\tSTORE(%s + %d);\n\n\tprint_stack();\n\n", str, x->offset);
                                 } else {
                                     compiler_error("Can't assign value %d to %s. Attribute hasn't been declared in this scope.\n", $3->int_val, $1->name);
                                 }
@@ -256,6 +257,7 @@ elsop : else inst             {printf("Fin%d:\n\tNOP;\n", $<att>-2->label_number
 bool_cond : PO exp PF         {
                                 $$ = new_attribute();
                                 $$->label_number = $<att>0->label_number;
+                                printf("\n\tprint_stack();\n\n");
                                 printf("\tIFN(Else%d);\n", $<att>0->label_number);
                               }
 ;
@@ -267,17 +269,18 @@ if : IF                       {$$ = new_attribute();
 else : ELSE                   {
                                 $$ = new_attribute();
                                 $$->label_number = $<att>-2->label_number;
-                                printf("\tGOTO(Fin%d);\nElse%d:\n", $$->label_number, $<att>-2->label_number);}
+                                printf("\n\tprint_stack();\n\n\tGOTO(Fin%d);\nElse%d:\n", $$->label_number, $<att>-2->label_number);}
 ;
 
 // II.4. Iterations
 
-loop : while while_cond inst  {printf("\tGOTO(Loop%d);\nEnd%d:\n\tNOP;\n", $1->label_number, $2->label_number);}
+loop : while while_cond inst  {printf("\n\tprint_stack();\n\n\tGOTO(Loop%d);\nEnd%d:\n\tNOP;\n", $1->label_number, $2->label_number);}
 ;
 
 while_cond : PO exp PF        {
                                 $$ = new_attribute();
                                 $$->label_number = $<att>0->label_number;
+                                printf("\n\tprint_stack();\n\n");
                                 printf("\tIFN(End%d);\n", $$->label_number);}
 
 while : WHILE                 {
@@ -290,12 +293,12 @@ while : WHILE                 {
 // II.3 Expressions
 exp:
 // II.3.1 Exp. arithmetiques
- MOINS exp %prec UNA         {printf("\tNEGI;\n");}
+ MOINS exp %prec UNA         {printf("\tNEGI;\n\tprint_stack();\n\n\n");}
          // -x + y lue comme (- x) + y  et pas - (x + y)
-| exp PLUS exp                {printf("\tADDI;\n");}
-| exp MOINS exp               {printf("\tSUBI;\n");}
-| exp STAR exp                {printf("\tMULTI;\n");}
-| exp DIV exp                 {printf("\tDIVI\n");}
+| exp PLUS exp                {printf("\tADDI;\n\tprint_stack();\n\n\n");}
+| exp MOINS exp               {printf("\tSUBI;\n\tprint_stack();\n\n\n");}
+| exp STAR exp                {printf("\tMULTI;\n\tprint_stack();\n\n\n");}
+| exp DIV exp                 {printf("\tDIVI;\n\tprint_stack();\n\n\n");}
 | PO exp PF                   {}
 | ID                          {
                                 sid s = string_to_sid($1->name);
@@ -340,10 +343,13 @@ app : ID PO args PF           {
                                     compiler_error("Too many arguments for function %s. Expected %d, got %d\n", $1->name, x->args_number, $<att>3->args_number);
                                 printf("\tENTER_BLOCK(%d);\n", x->args_number);
                                 printf("\t%s_pcode();\n", $1->name);
-                                if (strcmp(x->type_return, "void")) 
+                                if (strcmp(x->type_return, "void")) {
+                                    printf("\n\tprint_stack();\n\n");
                                     printf("\tEXIT_BLOCK(%d);\n", x->args_number);
-                                else
+                                } else {
+                                    printf("\n\tprint_stack();\n\n");
                                     printf("\tEXIT_BLOCK_NO_RETURN(%d);\n", x->args_number);
+                                }
                                 }
 
 ;
