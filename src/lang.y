@@ -7,7 +7,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 #include <stdarg.h>
 
 extern int yylex();
@@ -19,11 +19,11 @@ void yyerror (char* s) {
 
 void compiler_error(const char* error_msg, ...) {
     va_list args;
-    fprintf(stdout, "Error: ");
+    fprintf(stderr, "Error: ");
     va_start(args, error_msg);
-    vfprintf(stdout, error_msg, args);
+    vfprintf(stderr, error_msg, args);
     va_end(args);
-    fprintf(stdout, "\n");
+    exit(-1);
 }
 		
 
@@ -58,7 +58,7 @@ void compiler_error(const char* error_msg, ...) {
 
 // liste de tous les non terminaux dont vous voulez manipuler l'attribut
 %type <att> exp  typename  type  vlist  cond  if  bool_cond  inst  elsop  else  
-%type <att> loop  while_cond  while  params  arglist  fun_head  args
+%type <att> loop  while_cond  while  params  arglist  fun_head  args  app
          
 
 %%
@@ -81,6 +81,7 @@ fun_type: type                 {}
 fun_head : ID PO PF            {
                                 $1->type_val = $<att>0->type_val;
                                 $1->args_number = 0;
+                                $1->is_func = 1;
                                 $1->type_return = $<att>0->name;
                                 set_symbol_value(string_to_sid($1->name), $1);
                                 if (strcmp($1->name, "main"))
@@ -93,6 +94,7 @@ fun_head : ID PO PF            {
 | ID PO params PF              {
                                 $1->type_val = $<att>0->type_val;
                                 $1->args_number = get_args_number();
+                                $1->is_func = 1;
                                 $1->type_return = $<att>0->name;
                                 set_symbol_value(string_to_sid($1->name), $1);
                                 if (strcmp($1->name, "main"))
@@ -141,6 +143,8 @@ vir : VIR                      {}
 fun_body : AO block AF         {if (strcmp($<att>0->name, "main")) {
                                     if (!strcmp($<att>0->type_return, "void") && is_return_seen())
                                         compiler_error("Function %s is void but has a return statement.\n", $<att>0->name);
+                                        if (strcmp($<att>0->type_return, "void") && !is_return_seen())
+                                        compiler_error("Function %s has a return type but hasn't got a return statement.\n", $<att>0->name);
                                     printf("}\n\n");
                                 }
                                 else {
@@ -221,6 +225,10 @@ af : AF                         {
 aff : ID EQ exp               {
                                 attribute x;
                                 sid s = string_to_sid($1->name);
+                                sid exp_sid = string_to_sid($3->name);
+                                attribute exp;
+                                if (sid_valid(exp_sid) && (exp = get_symbol_value(exp_sid))->is_func && !strcmp(exp->type_return, "void"))
+                                    compiler_error("Can't assign return value of a void function %s since it doesn't has one.\n", get_symbol_value(exp_sid)->name);
                                 if (sid_valid(s)) {
                                   x = get_symbol_value(s);
                                   char* str = "mp";
@@ -231,7 +239,7 @@ aff : ID EQ exp               {
                                   else
                                     printf("\tSTORE(%s + %d);\n\n\tprint_stack();\n\n", str, x->offset);
                                 } else {
-                                    compiler_error("Can't assign value %d to %s. Attribute hasn't been declared in this scope.\n", $3->int_val, $1->name);
+                                    compiler_error("Can't assign value %d to %s. Attribute hasn't been declared.\n", $3->int_val, $1->name);
                                 }
                               }
 ;
@@ -303,7 +311,7 @@ exp:
 | exp MOINS exp               {printf("\tSUBI;\n\tprint_stack();\n\n\n");}
 | exp STAR exp                {printf("\tMULTI;\n\tprint_stack();\n\n\n");}
 | exp DIV exp                 {printf("\tDIVI;\n\tprint_stack();\n\n\n");}
-| PO exp PF                   {}
+| PO exp PF                   {$$=$2;}
 | ID                          {
                                 sid s = string_to_sid($1->name);
                                 if (!exists_symbol_value(s)) 
@@ -317,7 +325,7 @@ exp:
                                 else 
                                     printf("\tLOAD(%s + %d);\n", str, x->offset);
                               }
-| app                         {}
+| app                         {$$=$1;}
 | NUM                         {printf("\tLOADI(%d);\n", $1->int_val);}
 
 
@@ -339,10 +347,10 @@ exp:
 
 app : ID PO args PF           {
                                 if (!exists_symbol_value(string_to_sid($1->name)))
-                                    compiler_error("Unknown function %s", $1->name);
+                                    compiler_error("Unknown function %s.\n", $1->name);
                                 attribute x = get_symbol_value(string_to_sid($1->name));
                                 if ($<att>3->args_number < x->args_number)
-                                    compiler_error("Not enougth arguments for function %s. Expected %d, got %d.\n", $1->name, x->args_number, $<att>3->args_number);
+                                    compiler_error("Not enough arguments for function %s. Expected %d, got %d.\n", $1->name, x->args_number, $<att>3->args_number);
                                 if ($<att>3->args_number > x->args_number)
                                     compiler_error("Too many arguments for function %s. Expected %d, got %d\n", $1->name, x->args_number, $<att>3->args_number);
                                 printf("\tENTER_BLOCK(%d);\n", x->args_number);

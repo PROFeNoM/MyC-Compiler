@@ -1,0 +1,10 @@
+void uselessFunction() {
+    int solution;
+    solution = 42;
+}
+
+int main() {
+    int x;
+    x = (uselessFunction());
+    return x;
+}

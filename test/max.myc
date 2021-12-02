@@ -3,6 +3,7 @@ int max(int a, int b, int c) {
     result = a;
     if (b > result) result = b;
     if (c > result) result = c;
+    return result;
 }
 
 int main() {

@@ -1,0 +1,8 @@
+int missingReturn() {
+    int x;
+    x = 42;
+}
+
+int main() {
+    return missingReturn();
+}

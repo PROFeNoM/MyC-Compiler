@@ -1,0 +1,7 @@
+int nine() {
+    return 9;
+}
+
+int main() {
+    return nine(1);
+}

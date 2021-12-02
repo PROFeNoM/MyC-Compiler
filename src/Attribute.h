@@ -29,6 +29,7 @@ struct ATTRIBUTE {
   int args_number;
   char* function_name;
   char* type_return;
+  int is_func;
 
   int is_in_func;
   int args_rank;
