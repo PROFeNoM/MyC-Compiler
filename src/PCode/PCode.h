@@ -156,8 +156,9 @@ extern int mp;
     Mettre N = 0 pour un bloc simple.
 */
 
-#define EXIT_BLOCK(N) mp = stack[mp-1];stack[sp-N-2]=stack[sp-1];sp-= N+1
-#define EXIT_BLOCK_NO_RETURN(N) mp = stack[mp-1];sp-= N+1
+int tmp;
+#define EXIT_BLOCK(N) tmp = mp - 1;mp = stack[mp-1];stack[tmp - N]=stack[sp-1];sp = tmp - N + 1
+#define EXIT_BLOCK_NO_RETURN(N) tmp = mp - 1;mp = stack[mp-1];sp = tmp - N
 
 /*
 

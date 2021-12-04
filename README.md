@@ -20,6 +20,7 @@ Le projet s'organise de la sorte :
     * `nested_while_if_with_function[1-2].myc` : Les valeurs de retour doivent être 5 et 9 (Expressions arithmétiques, déclarations, affectations, réutilisations, conditionnelles, itérateur, blocs, fonction)
     * `pow.myc` : La valeur de retour doit être 8 (Expressions arithmétiques, conditionnelles, blocs, fonction récursive)
     * `sumTo.myc` : La valeur de retour doit être 5050 (Expressions arithmétiques, déclarations, affectations, réutilisations, itérateur, blocs, fonction)
+    * `multiple_declarations_in_*.myc` : Les valeurs de retour doivent être 6 (Grand nombre de déclarations, blocs, fonctions, expressions arithmétiques)
     * `ERROR_.*.myc` : Doivent provoquer une **erreur de compilation** (message qui est donc provoqué à la compilation, bien-sûr...)
   - `Makefile` : Compile le compilateur en un executable `myc` se trouvant dans le repertoire courant
   - `compil.sh` : Script shell permettant de générer le compilateur s'il n'existe pas et compiler le fichier `.myc` donné en argument en `.c` et son executable, qui se trouveront alors dans le répertoire `test/`
